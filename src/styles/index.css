@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-paper text-ink-text font-sans antialiased;
+  }
+
+  /* Financial figures always use tabular, monospace numerals so amount columns align */
+  .figure {
+    @apply font-mono tabular-nums;
+  }
+}
+
+@layer components {
+  /* The ledger "closing rule" - a deliberate, sparingly-used motif under key totals */
+  .ledger-rule {
+    @apply mt-2 border-t border-ink/30;
+  }
+  .ledger-rule::after {
+    content: '';
+    display: block;
+    height: 3px;
+    margin-top: 2px;
+    background: currentColor;
+    opacity: 0.85;
+  }
+}
