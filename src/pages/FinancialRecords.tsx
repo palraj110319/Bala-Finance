@@ -142,6 +142,13 @@ export function FinancialRecords() {
       return;
     }
 
+    // Original amount is required unless an interest amount has been entered —
+    // in that case the record can be saved with the original amount left blank.
+    if (!form.originalAmount && !form.interestAmount) {
+      show('Enter an original amount, or an interest amount.', 'error');
+      return;
+    }
+
     let req = form;
     try {
       setResolvingPerson(true);
@@ -356,7 +363,6 @@ export function FinancialRecords() {
               step="0.01"
               value={form.originalAmount || ''}
               onChange={(e) => setForm({ ...form, originalAmount: Number(e.target.value) })}
-              required
             />
           </Field>
           <Field label="Interest amount (₹)">
