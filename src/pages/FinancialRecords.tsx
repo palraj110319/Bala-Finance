@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, RefreshCw, Filter, ArrowUp, ArrowDown, ListX } from 'lucide-react';
+import { Plus, Pencil, Trash2, Filter, ArrowUp, ArrowDown, ListX } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { LoadingIndicator } from '@/components/common/LoadingIndicator';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
@@ -38,6 +38,8 @@ export function FinancialRecords() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<FinancialRecordResponse | null>(null);
   const [form, setForm] = useState<FinancialRecordRequest>(emptyForm);
+  const [personName, setPersonName] = useState('');
+  const [resolvingPerson, setResolvingPerson] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<FinancialRecordResponse | null>(null);
   const [deleteAllOpen, setDeleteAllOpen] = useState(false);
 
@@ -106,6 +108,7 @@ export function FinancialRecords() {
   const openAddModal = () => {
     setEditing(null);
     setForm(emptyForm);
+    setPersonName('');
     setModalOpen(true);
   };
 
@@ -120,6 +123,7 @@ export function FinancialRecords() {
       place: record.place ?? '',
       notes: record.notes ?? '',
     });
+    setPersonName(record.personName);
     setModalOpen(true);
   };
 
@@ -127,18 +131,35 @@ export function FinancialRecords() {
     setModalOpen(false);
     setEditing(null);
     setForm(emptyForm);
+    setPersonName('');
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!form.personId) {
-      show('Choose a person for this record.', 'error');
+    const trimmedName = personName.trim();
+    if (!trimmedName) {
+      show('Enter a person for this record.', 'error');
       return;
     }
+
+    let req = form;
+    try {
+      setResolvingPerson(true);
+      // Same person-lookup-or-create rule the Excel import already uses, so typing an
+      // existing name reuses that person instead of creating a duplicate.
+      const person = await personsApi.findOrCreateByName(trimmedName, form.place || undefined);
+      req = { ...form, personId: person.id };
+    } catch {
+      show('Could not resolve this person. Please try again.', 'error');
+      return;
+    } finally {
+      setResolvingPerson(false);
+    }
+
     if (editing) {
-      updateMutation.mutate({ id: editing.id, req: form });
+      updateMutation.mutate({ id: editing.id, req });
     } else {
-      createMutation.mutate(form);
+      createMutation.mutate(req);
     }
   };
 
@@ -256,14 +277,6 @@ export function FinancialRecords() {
                   <td className="px-5 py-3 text-ink-text/70">{record.place || '—'}</td>
                   <td className="px-5 py-3">
                     <div className="flex justify-end gap-1">
-                      {(record.status === 'OPEN' || record.status === 'PARTIAL_PAYMENT') && (
-                        <button
-                          title="Renew"
-                          className="p-1.5 text-ink-text/50 hover:text-status-renewal transition-colors"
-                        >
-                          <RefreshCw size={16} />
-                        </button>
-                      )}
                       <button
                         title="Edit"
                         onClick={() => openEditModal(record)}
@@ -321,18 +334,12 @@ export function FinancialRecords() {
       <Modal open={modalOpen} title={editing ? 'Edit record' : 'Add record'} onClose={closeModal}>
         <form onSubmit={handleSubmit}>
           <Field label="Person">
-            <Select
-              value={form.personId || ''}
-              onChange={(e) => setForm({ ...form, personId: Number(e.target.value) })}
+            <TextInput
+              value={personName}
+              onChange={(e) => setPersonName(e.target.value)}
+              placeholder="Enter person's name"
               required
-            >
-              <option value="">Choose a person…</option>
-              {persons?.content.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Select>
+            />
           </Field>
           <Field label="Record date">
             <TextInput
@@ -396,7 +403,7 @@ export function FinancialRecords() {
             </button>
             <button
               type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending}
+              disabled={createMutation.isPending || updateMutation.isPending || resolvingPerson}
               className="px-4 py-2 text-sm rounded bg-ink text-paper font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {editing ? 'Save changes' : 'Create record'}

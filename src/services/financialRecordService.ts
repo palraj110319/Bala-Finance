@@ -8,7 +8,16 @@ import type {
   RecordStatus,
 } from '@/types';
 import type { FinancialRecordRequest, RecordSearchParams } from '@/api/records';
-import type { RenewalRequest } from '@/api/renewals';
+
+// Renewal chain data (parentRecordId, RENEWED status, etc.) is still part of the
+// core record model, so this type and the renew()/getRenewalChain() logic below
+// are kept even though the dedicated Renewals menu/page has been removed.
+export interface RenewalRequest {
+  renewalDate: string;
+  newPrincipalAmount: number;
+  newInterestAmount?: number;
+  notes?: string;
+}
 
 class NotFoundError extends Error {}
 export class BusinessValidationError extends Error {}

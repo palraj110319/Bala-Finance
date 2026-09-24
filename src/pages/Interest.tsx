@@ -121,6 +121,7 @@ export function Interest() {
                 <th className="px-5 py-3">Date</th>
                 <th className="px-5 py-3">Person</th>
                 <th className="px-5 py-3 text-right">Principal</th>
+                <th className="px-5 py-3 text-right">Outstanding</th>
                 <th className="px-5 py-3 text-right">Interest</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3 text-right">Actions</th>
@@ -133,6 +134,9 @@ export function Interest() {
                   <td className="px-5 py-3 font-medium text-ink-text">{record.personName}</td>
                   <td className="px-5 py-3 text-right figure text-ink-text">
                     {formatINR(record.principalOutstanding)}
+                  </td>
+                  <td className="px-5 py-3 text-right figure text-status-outstanding">
+                    {formatINR(record.outstandingAmount)}
                   </td>
                   <td className="px-5 py-3 text-right figure text-ink-text/70">
                     {formatINR(record.interestAmount)}
@@ -155,7 +159,7 @@ export function Interest() {
               ))}
               {data?.content.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-ink-text/40 text-sm">
+                  <td colSpan={7} className="px-5 py-10 text-center text-ink-text/40 text-sm">
                     No records found.
                   </td>
                 </tr>

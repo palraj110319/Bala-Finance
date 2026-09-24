@@ -3,7 +3,6 @@ import { Login } from '@/pages/Login';
 import { Dashboard } from '@/pages/Dashboard';
 import { FinancialRecords } from '@/pages/FinancialRecords';
 import { Interest } from '@/pages/Interest';
-import { Renewals } from '@/pages/Renewals';
 import { Reports } from '@/pages/Reports';
 import { ExcelImport } from '@/pages/ExcelImport';
 import { Settings } from '@/pages/Settings';
@@ -34,14 +33,6 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Interest />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/renewals"
-        element={
-          <ProtectedRoute>
-            <Renewals />
           </ProtectedRoute>
         }
       />
