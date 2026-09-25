@@ -33,7 +33,10 @@ export async function getMonthlyInterest(year: number): Promise<MonthlyInterestR
   const byMonth = new Map<number, number>();
 
   for (const r of records) {
-    const d = new Date(r.recordDate);
+    // Group by Status Date when the record has one (set via Excel import); records without a
+    // Status Date (e.g. created manually) fall back to the existing recordDate-based behaviour.
+    const effectiveDate = r.statusDate || r.recordDate;
+    const d = new Date(effectiveDate);
     if (d.getFullYear() !== year) continue;
     const month = d.getMonth() + 1;
     byMonth.set(month, (byMonth.get(month) ?? 0) + r.interestAmount);

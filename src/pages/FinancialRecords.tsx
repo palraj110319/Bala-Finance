@@ -259,6 +259,7 @@ export function FinancialRecords() {
                 <th className="px-5 py-3 text-right">Original</th>
                 <th className="px-5 py-3 text-right">Outstanding</th>
                 <th className="px-5 py-3 text-right">Interest</th>
+                <th className="px-5 py-3">Status date</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3">Place</th>
                 <th className="px-5 py-3 text-right">Actions</th>
@@ -278,6 +279,7 @@ export function FinancialRecords() {
                   <td className="px-5 py-3 text-right figure text-ink-text/70">
                     {formatINR(record.interestAmount)}
                   </td>
+                  <td className="px-5 py-3 text-ink-text/70">{formatDate(record.statusDate)}</td>
                   <td className="px-5 py-3">
                     <StatusBadge status={record.status} />
                   </td>
@@ -304,7 +306,7 @@ export function FinancialRecords() {
               ))}
               {data?.content.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-10 text-center text-ink-text/40 text-sm">
+                  <td colSpan={9} className="px-5 py-10 text-center text-ink-text/40 text-sm">
                     No records found.
                   </td>
                 </tr>

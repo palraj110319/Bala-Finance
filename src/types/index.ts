@@ -15,6 +15,7 @@ export interface FinancialRecordResponse {
   personName: string;
   parentRecordId?: number;
   recordDate: string;
+  statusDate?: string;
   originalAmount: number;
   principalOutstanding: number;
   interestAmount: number;
@@ -79,6 +80,7 @@ export interface ExcelImportPreviewRow {
   sheetName: string;
   personName: string;
   recordDate?: string;
+  statusDate?: string;
   originalAmount?: number;
   principalAmount?: number;
   interestAmount?: number;

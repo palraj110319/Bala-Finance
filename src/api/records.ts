@@ -4,6 +4,7 @@ import type { FinancialRecordResponse, PageResponse, RecordStatus } from '@/type
 export interface FinancialRecordRequest {
   personId: number;
   recordDate: string;
+  statusDate?: string;
   originalAmount: number;
   interestAmount: number;
   status: RecordStatus;

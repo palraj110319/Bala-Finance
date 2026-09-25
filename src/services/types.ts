@@ -26,6 +26,7 @@ export interface FinancialRecordRow {
   personId: number;
   parentRecordId?: number | null;
   recordDate: string;
+  statusDate?: string | null;
   originalAmount: number;
   principalOutstanding: number;
   interestAmount: number;

@@ -12,10 +12,11 @@ import type {
 
 /**
  * Parses workbooks matching the "Bala_Debt_details.xlsx" structure:
- * columns [Date, Name, Principle Amt, Status, Intrest Amt, Place, Notes, Original Amt] (header
- * spellings, including "Intrest Amt" and "Principle Amt", are intentional — they match the
- * original source data), one sheet per year-range. Status values observed: Closed, Renewl
- * (=Renewed), Open, or blank.
+ * columns [Date, Name, Principle Amt, Status, Intrest Amt, Place, Notes, Original Amt, Status Date]
+ * (header spellings, including "Intrest Amt" and "Principle Amt", are intentional — they match
+ * the original source data), one sheet per year-range. Status values observed: Closed, Renewl
+ * (=Renewed), Open, or blank. "Status Date" is a newer, optional column used only by the
+ * dashboard's monthly interest grouping — its absence never affects row validation.
  *
  * Column semantics (inferred from real data, not just headers):
  *  - For CLOSED/RENEWED rows: "Original Amt" = amount originally lent, "Principle Amt" ~ 0.
@@ -28,6 +29,7 @@ interface StagedRow {
   sheetName: string;
   personName: string;
   recordDate: string | null; // ISO yyyy-MM-dd
+  statusDate: string | null; // ISO yyyy-MM-dd, optional
   originalAmount: number;
   principalAmount: number;
   interestAmount: number;
@@ -144,6 +146,7 @@ function parseSheet(sheetName: string, rows: unknown[][]): StagedRow[] {
   });
 
   const dateCol = colIndex.get('Date') ?? -1;
+  const statusDateCol = colIndex.get('Status Date') ?? -1;
   const nameCol = colIndex.get('Name') ?? -1;
   const principalCol = colIndex.get('Principle Amt') ?? -1;
   const statusCol = colIndex.get('Status') ?? -1;
@@ -163,6 +166,10 @@ function parseSheet(sheetName: string, rows: unknown[][]): StagedRow[] {
     if (!name || name.toLowerCase() === 'total amount') continue;
 
     const date = parseDate(cellAt(row, dateCol));
+    // Status Date is a supplementary column (used for the dashboard's monthly interest grouping);
+    // it's optional and, unlike the main Date column, a missing/unparseable value never affects
+    // this row's validation state — it just means callers fall back to recordDate later.
+    const statusDate = parseDate(cellAt(row, statusDateCol));
     const principal = parseDecimal(cellAt(row, principalCol));
     const interest = parseDecimal(cellAt(row, interestCol));
     const original = parseDecimal(cellAt(row, originalCol));
@@ -204,6 +211,7 @@ function parseSheet(sheetName: string, rows: unknown[][]): StagedRow[] {
       sheetName,
       personName: name.trim(),
       recordDate: date,
+      statusDate,
       originalAmount: scale2(resolvedOriginal),
       principalAmount: scale2(principal ?? 0),
       interestAmount: scale2(interest ?? 0),
@@ -240,6 +248,7 @@ export async function preview(file: File): Promise<ExcelImportPreviewResponse> {
     sheetName: r.sheetName,
     personName: r.personName,
     recordDate: r.recordDate ?? undefined,
+    statusDate: r.statusDate ?? undefined,
     originalAmount: r.originalAmount,
     principalAmount: r.principalAmount,
     interestAmount: r.interestAmount,
@@ -287,6 +296,7 @@ export async function confirm(importToken: string, includeFlaggedRows: boolean):
         personId: person.id,
         parentRecordId: null,
         recordDate: row.recordDate!,
+        statusDate: row.statusDate,
         originalAmount: row.originalAmount,
         principalOutstanding: isOpenLike ? row.principalAmount : 0,
         interestAmount: row.interestAmount,

@@ -36,6 +36,7 @@ async function toResponse(row: FinancialRecordRow): Promise<FinancialRecordRespo
     personName: person?.name ?? '(unknown)',
     parentRecordId: row.parentRecordId ?? undefined,
     recordDate: row.recordDate,
+    statusDate: row.statusDate ?? undefined,
     originalAmount: row.originalAmount,
     principalOutstanding: row.principalOutstanding,
     interestAmount: row.interestAmount,
@@ -60,6 +61,7 @@ export async function create(request: FinancialRecordRequest): Promise<Financial
     personId: person.id,
     parentRecordId: null,
     recordDate: request.recordDate,
+    statusDate: request.statusDate || null,
     originalAmount: scale2(request.originalAmount),
     principalOutstanding: scale2(request.originalAmount),
     interestAmount: scale2(request.interestAmount),
@@ -85,6 +87,12 @@ export async function update(id: number, request: FinancialRecordRequest): Promi
   }
 
   row.recordDate = request.recordDate;
+  // statusDate isn't exposed on the manual Add/Edit form yet, so only overwrite it when the
+  // caller explicitly supplies a value — this keeps Status Dates set via Excel import intact
+  // when a record is edited for an unrelated reason.
+  if (request.statusDate !== undefined) {
+    row.statusDate = request.statusDate || null;
+  }
   row.originalAmount = scale2(request.originalAmount);
   row.interestAmount = scale2(request.interestAmount);
   row.status = request.status;
